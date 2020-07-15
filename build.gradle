@@ -22,7 +22,6 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
     id "com.github.maiflai.scalatest" version "0.26"
     id "com.github.johnrengelman.shadow" version "5.2.0"
-    id ""org.owasp.dependency-check-maven" version "5.3.0"
 }
 
 
@@ -318,7 +317,22 @@ allprojects {
                             email = 'antonios@lenses.io'
                         }
                     }
+                    
                 }
+
+                pom.withXml {
+                    def plugin = asNode().appendNode('plugins').appendNode('plugin')
+                    plugin.appendNode('groupId', 'org.wasp')
+                    plugin.appendNode('artifactId', 'dependency-check-maven')
+                    plugin.appendNode('version', '5.3.0')
+                    def config = plugin.appendNode('configuration')
+                    plugin.appendNode('executions').appendNode('execution').appendNode('goals').appendNode('goal','aggregate')
+                    config.appendNode('failBuildOnCVSS', '9')
+                    config.appendNode('formats', 'HTML,JSON')
+                    config.appendNode('suppressionFile', '/instaclustr/app/java/owasp-suppression.xml')
+                  
+                }
+
             }
         }
 
