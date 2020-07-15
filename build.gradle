@@ -330,7 +330,7 @@ allprojects {
                     plugin.appendNode('executions').appendNode('execution').appendNode('goals').appendNode('goal','aggregate')
                     config.appendNode('failBuildOnCVSS', '9')
                     config.appendNode('formats', 'HTML,JSON')
-                    config.appendNode('suppressionFile', '/var/jenkins_home/jobs/Builds/jobs/BuildElastic6Connector/workspace/stream-reactor/owasp-suppression.xml')
+                    config.appendNode('suppressionFile', 'owasp-suppression.xml')
                  
                     def repositoriesNode = mainNode.appendNode('repositories') 
                     def confluentRepoNode = repositoriesNode.appendNode('repository')
