@@ -321,7 +321,8 @@ allprojects {
                 }
 
                 pom.withXml {
-                    def plugin = asNode().appendNode('build').appendNode('plugins').appendNode('plugin')
+                    def mainNode = asNode()
+                    def plugin = mainNode.appendNode('build').appendNode('plugins').appendNode('plugin')
                     plugin.appendNode('groupId', 'org.owasp')
                     plugin.appendNode('artifactId', 'dependency-check-maven')
                     plugin.appendNode('version', '5.3.0')
@@ -330,7 +331,12 @@ allprojects {
                     config.appendNode('failBuildOnCVSS', '9')
                     config.appendNode('formats', 'HTML,JSON')
                     config.appendNode('suppressionFile', '/instaclustr/app/java/owasp-suppression.xml')
-                  
+                 
+                    def repositoriesNode = mainNode.appendNode('repositories') 
+                    def confluentRepoNode = repositoriesNode.appendNode('repository')
+                    confluentRepoNode.appendNode('id', 'confluent')
+                    confluentRepoNode.appendNode('name', 'Confluent Repository')
+                    confluentRepoNode.appendNode('url', 'https://packages.confluent.io/maven/')
                 }
 
             }
