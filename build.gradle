@@ -321,7 +321,7 @@ allprojects {
                 }
 
                 pom.withXml {
-                    def plugin = asNode().appendNode('plugins').appendNode('plugin')
+                    def plugin = asNode().appendNode('build').appendNode('plugins').appendNode('plugin')
                     plugin.appendNode('groupId', 'org.wasp')
                     plugin.appendNode('artifactId', 'dependency-check-maven')
                     plugin.appendNode('version', '5.3.0')
