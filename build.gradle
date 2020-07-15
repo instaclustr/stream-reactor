@@ -266,6 +266,10 @@ allprojects {
                   url "s3://instaclustr-maven-dev/release"
                 }
 
+                authentication {
+                  awsIm(AwsImAuthentication)
+                }
+
                 // Uncomment this outside of jenkins as you would need your IAM creds
 //                credentials(AwsCredentials) {
 //                    accessKey project.getProperty('AWSAccessKeyId') 
