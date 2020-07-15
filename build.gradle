@@ -179,7 +179,7 @@ allprojects {
         compile "com.typesafe.scala-logging:scala-logging_${scalaMajorVersion}:${scalaLoggingVersion}"
         compile "org.apache.kafka:connect-json:$kafkaVersion"
         compile "io.confluent:kafka-connect-avro-converter:$confluentVersion"
-        compile "io.confluent:kafka-schema-registry:$confluentVersion"
+        compile "io.confluent:kafka-schema-registry-client:$confluentVersion"
         compile "com.datamountaineer:kafka-connect-common:$dataMountaineerCommonVersion"
         compile "org.apache.calcite:calcite-linq4j:$link4jVersion"
 
@@ -251,36 +251,48 @@ allprojects {
         }
     }
 
-    // OSSRH publication
-    uploadArchives {
+    publishing {
         repositories {
-            mavenDeployer {
+            maven {
                 // POM signature
-                beforeDeployment { MavenDeployment deployment ->
-                    signArchives
-                    signing.signPom(deployment)
+//                beforeDeployment { MavenDeployment deployment ->
+//                    signArchives
+//                    signing.signPom(deployment)
+//                }
+
+                if (project.hasProperty('development.environment') && project.getProperty('development.environment') == 'preprod') {
+                  url "s3://instaclustr-maven-preprod/release"
+                } else {
+                  url "s3://instaclustr-maven-dev/release"
                 }
-                // Target repository
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-                pom.project {
-                    name project.name
-                    description project.description
-                    packaging 'jar'
-                    url 'https://github.com/landoop/stream-reactor'
+
+                // Uncomment this outside of jenkins as you would need your IAM creds
+//                credentials(AwsCredentials) {
+//                    accessKey project.getProperty('AWSAccessKeyId') 
+//                    secretKey project.getProperty('AWSSecretKey')
+//                }
+            }
+        }
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                pom {
+                    name = project.name
+                    description = project.description
+                    packaging = 'jar'
+                    url = 'https://github.com/landoop/stream-reactor'
 
                     scm {
-                        connection 'scm:git:https://github.com/lensesio/stream-reactor.git'
-                        developerConnection 'scm:git:git@github.com:lensesio/stream-reactor.git'
-                        url 'https://github.com/lensesio/stream-reactor.git'
+                        connection = 'scm:git:https://github.com/lensesio/stream-reactor.git'
+                        developerConnection = 'scm:git:git@github.com:lensesio/stream-reactor.git'
+                        url = 'https://github.com/lensesio/stream-reactor.git'
                     }
 
                     licenses {
                         license {
-                            name 'Apache License 2.0'
-                            url 'https://www.apache.org/licenses/LICENSE-2.0.html'
-                            distribution 'repo'
+                            name = 'Apache License 2.0'
+                            url = 'https://www.apache.org/licenses/LICENSE-2.0.html'
+                            distribution = 'repo'
                         }
                     }
 
@@ -303,8 +315,8 @@ allprojects {
                     }
                 }
             }
-
         }
+
     }
 }
 
