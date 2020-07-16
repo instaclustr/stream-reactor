@@ -134,6 +134,7 @@ allprojects {
         }
     }
 
+
     shadowJar {
         configurations = [project.configurations.runtime]
         baseName = "${project.name}-${project.version}-${kafkaVersion}-all"
@@ -251,6 +252,13 @@ allprojects {
         }
     }
 
+    // the dependency is only used to get the dependencies of the project in the resulting pom
+    tasks.withType(PublishToMavenRepository) {
+        onlyIf {
+            publication == publishing.publications.deployedMaterials
+        }
+    }
+
     publishing {
         repositories {
             maven {
@@ -271,15 +279,78 @@ allprojects {
                 }
 
                 // Uncomment this outside of jenkins as you would need your IAM creds
-//                credentials(AwsCredentials) {
-//                    accessKey project.getProperty('AWSAccessKeyId') 
-//                    secretKey project.getProperty('AWSSecretKey')
-//                }
+                //credentials(AwsCredentials) {
+                //    accessKey project.getProperty('AWSAccessKeyId') 
+                //    secretKey project.getProperty('AWSSecretKey')
+                //}
             }
         }
         publications {
             mavenJava(MavenPublication) {
                 from components.java
+
+                pom {
+                    name = project.name
+                    description = project.description
+                    packaging = 'jar'
+                    url = 'https://github.com/landoop/stream-reactor'
+
+                    scm {
+                        connection = 'scm:git:https://github.com/lensesio/stream-reactor.git'
+                        developerConnection = 'scm:git:git@github.com:lensesio/stream-reactor.git'
+                        url = 'https://github.com/lensesio/stream-reactor.git'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'Apache License 2.0'
+                            url = 'https://www.apache.org/licenses/LICENSE-2.0.html'
+                            distribution = 'repo'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'andrewstevenson'
+                            name = 'Andrew Stevenson'
+                            email = 'andrew@lenses.io'
+                        }
+                        developer {
+                            id = 'stheppi'
+                            name = 'Stefan Bocutiu'
+                            email = 'stefan@lenses.io'
+                        }
+                        developer {
+                            id = 'antwins'
+                            name = 'Antonios Chalkiopoulos'
+                            email = 'antonios@lenses.io'
+                        }
+                    }
+                }
+
+                pom.withXml {
+                    def mainNode = asNode()
+                    def plugin = mainNode.appendNode('build').appendNode('plugins').appendNode('plugin')
+                    plugin.appendNode('groupId', 'org.owasp')
+                    plugin.appendNode('artifactId', 'dependency-check-maven')
+                    plugin.appendNode('version', '5.3.0')
+                    def config = plugin.appendNode('configuration')
+                    plugin.appendNode('executions').appendNode('execution').appendNode('goals').appendNode('goal','aggregate')
+                    config.appendNode('failBuildOnCVSS', '9')
+                    config.appendNode('formats', 'HTML,JSON')
+                    config.appendNode('suppressionFile', 'stream-reactor/owasp-suppression.xml')
+                 
+                    def repositoriesNode = mainNode.appendNode('repositories') 
+                    def confluentRepoNode = repositoriesNode.appendNode('repository')
+                    confluentRepoNode.appendNode('id', 'confluent')
+                    confluentRepoNode.appendNode('name', 'Confluent Repository')
+                    confluentRepoNode.appendNode('url', 'https://packages.confluent.io/maven/')
+                }
+
+            }
+
+            deployedMaterials(MavenPublication) {
+                artifact shadowJar
                 pom {
                     name = project.name
                     description = project.description
@@ -319,26 +390,6 @@ allprojects {
                     }
                     
                 }
-
-                pom.withXml {
-                    def mainNode = asNode()
-                    def plugin = mainNode.appendNode('build').appendNode('plugins').appendNode('plugin')
-                    plugin.appendNode('groupId', 'org.owasp')
-                    plugin.appendNode('artifactId', 'dependency-check-maven')
-                    plugin.appendNode('version', '5.3.0')
-                    def config = plugin.appendNode('configuration')
-                    plugin.appendNode('executions').appendNode('execution').appendNode('goals').appendNode('goal','aggregate')
-                    config.appendNode('failBuildOnCVSS', '9')
-                    config.appendNode('formats', 'HTML,JSON')
-                    config.appendNode('suppressionFile', 'stream-reactor/owasp-suppression.xml')
-                 
-                    def repositoriesNode = mainNode.appendNode('repositories') 
-                    def confluentRepoNode = repositoriesNode.appendNode('repository')
-                    confluentRepoNode.appendNode('id', 'confluent')
-                    confluentRepoNode.appendNode('name', 'Confluent Repository')
-                    confluentRepoNode.appendNode('url', 'https://packages.confluent.io/maven/')
-                }
-
             }
         }
 
